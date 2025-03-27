@@ -62,9 +62,43 @@ window.addEventListener('unload', () => {
 
 ```typescript
 import { ReduxAdapter } from 'broadcast-channel-state-sync';
-import { store } from './store';
+import { configureStore } from '@reduxjs/toolkit';
+import todoSlice from './slices/todo';
 
-const adapter = new ReduxAdapter(store);
+// 创建 store
+const store = configureStore({
+  reducer: {
+    todos: todoSlice.reducer,
+  },
+});
+
+// 创建 Redux 适配器
+const adapter = new ReduxAdapter({
+  store,
+  slices: {
+    todos: todoSlice,
+  },
+  options: {
+    channelName: 'redux-channel',
+    syncTimeout: 3000,
+    retryAttempts: 5,
+  },
+});
+
+// 在 slice 中定义 setState 方法
+const todoSlice = createSlice({
+  name: 'todos',
+  initialState,
+  reducers: {
+    setState: (state, action) => {
+      // 更新整个状态
+      state.todos = action.payload.todos;
+      state.filter = action.payload.filter;
+    },
+    // ... 其他 reducers
+  },
+});
+
 const manager = new BroadcastChannelManager(adapter, {
   channelName: 'redux-state'
 });
@@ -74,10 +108,32 @@ const manager = new BroadcastChannelManager(adapter, {
 
 ```typescript
 import { PiniaAdapter } from 'broadcast-channel-state-sync';
-import { useStore } from './store';
+import { defineStore } from 'pinia';
 
-const store = useStore();
-const adapter = new PiniaAdapter(store);
+// 定义 store
+const useTodoStore = defineStore('todo', {
+  state: () => ({
+    todos: [],
+    filter: 'all',
+  }),
+  actions: {
+    // ... 其他 actions
+  },
+});
+
+// 创建 store 实例
+const store = useTodoStore();
+
+// 创建 Pinia 适配器
+const adapter = new PiniaAdapter({
+  store,
+  options: {
+    channelName: 'pinia-channel',
+    syncTimeout: 3000,
+    retryAttempts: 5,
+  },
+});
+
 const manager = new BroadcastChannelManager(adapter, {
   channelName: 'pinia-state'
 });
@@ -87,10 +143,31 @@ const manager = new BroadcastChannelManager(adapter, {
 
 ```typescript
 import { ZustandAdapter } from 'broadcast-channel-state-sync';
-import { useStore } from './store';
+import { create } from 'zustand';
 
-const store = useStore();
-const adapter = new ZustandAdapter(store);
+// 定义 store
+const useTodoStore = create((set) => ({
+  todos: [],
+  filter: 'all',
+  addTodo: (text) => set((state) => ({
+    todos: [...state.todos, { id: Date.now(), text, completed: false }]
+  })),
+  // ... 其他 actions
+}));
+
+// 创建 store 实例
+const store = useTodoStore();
+
+// 创建 Zustand 适配器
+const adapter = new ZustandAdapter({
+  store,
+  options: {
+    channelName: 'zustand-channel',
+    syncTimeout: 3000,
+    retryAttempts: 5,
+  },
+});
+
 const manager = new BroadcastChannelManager(adapter, {
   channelName: 'zustand-state'
 });
@@ -106,12 +183,33 @@ const manager = new BroadcastChannelManager(adapter, {
 | retryDelay | number | 1000 | 重试之间的延迟时间（毫秒） |
 | instanceId | string | crypto.randomUUID() | 实例标识符 |
 
+## 适配器说明
+
+### Redux 适配器
+
+Redux 适配器需要在创建时提供 store 和需要同步的 slices 配置。对于每个需要同步的 slice，你需要：
+
+1. 在 slice 中定义 `setState` reducer，用于处理从其他标签页接收到的状态更新
+2. 在创建适配器时，将 slice 实例传入 `slices` 配置中
+
+适配器会自动检测这些方法并使用它们来更新状态。如果没有提供这些方法，状态同步将无法正常工作。
+
+### Pinia 适配器
+
+Pinia 适配器需要在创建时提供 store 实例和配置选项。适配器会自动处理状态更新，不需要在 store 中定义额外的方法。
+
+### Zustand 适配器
+
+Zustand 适配器需要在创建时提供 store 实例和配置选项。适配器会自动处理状态更新，不需要在 store 中定义额外的方法。
+
 ## 注意事项
 
 - 该库依赖于 BroadcastChannel API，确保你的目标浏览器支持此 API
 - 建议在初始化时提供一个合适的状态管理器实现
 - 在组件卸载时调用 `destroy()` 方法以清理资源
 - 使用适配器时，确保状态管理器的类型与适配器兼容
+- 使用 Redux 适配器时，必须提供 `setState` 方法
+- 所有适配器都支持通过 options 配置同步选项
 
 ## 许可证
 
