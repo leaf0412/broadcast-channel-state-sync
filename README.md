@@ -10,6 +10,8 @@
 - 可配置的重试机制和超时设置
 - 自动状态初始化和同步
 - 支持自定义状态管理器
+- 内置对 Redux、Pinia 和 Zustand 的支持
+- 支持 ESM 和 CommonJS 模块系统
 
 ## 安装
 
@@ -18,6 +20,8 @@ npm install broadcast-channel-state-sync
 ```
 
 ## 使用方法
+
+### 基础用法
 
 ```typescript
 import { BroadcastChannelManager } from 'broadcast-channel-state-sync';
@@ -54,6 +58,44 @@ window.addEventListener('unload', () => {
 });
 ```
 
+### 使用 Redux 适配器
+
+```typescript
+import { ReduxAdapter } from 'broadcast-channel-state-sync';
+import { store } from './store';
+
+const adapter = new ReduxAdapter(store);
+const manager = new BroadcastChannelManager(adapter, {
+  channelName: 'redux-state'
+});
+```
+
+### 使用 Pinia 适配器
+
+```typescript
+import { PiniaAdapter } from 'broadcast-channel-state-sync';
+import { useStore } from './store';
+
+const store = useStore();
+const adapter = new PiniaAdapter(store);
+const manager = new BroadcastChannelManager(adapter, {
+  channelName: 'pinia-state'
+});
+```
+
+### 使用 Zustand 适配器
+
+```typescript
+import { ZustandAdapter } from 'broadcast-channel-state-sync';
+import { useStore } from './store';
+
+const store = useStore();
+const adapter = new ZustandAdapter(store);
+const manager = new BroadcastChannelManager(adapter, {
+  channelName: 'zustand-state'
+});
+```
+
 ## 配置选项
 
 | 选项 | 类型 | 默认值 | 描述 |
@@ -69,6 +111,7 @@ window.addEventListener('unload', () => {
 - 该库依赖于 BroadcastChannel API，确保你的目标浏览器支持此 API
 - 建议在初始化时提供一个合适的状态管理器实现
 - 在组件卸载时调用 `destroy()` 方法以清理资源
+- 使用适配器时，确保状态管理器的类型与适配器兼容
 
 ## 许可证
 
