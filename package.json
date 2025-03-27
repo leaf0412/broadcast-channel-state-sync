@@ -14,7 +14,8 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts"
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "prepare": "npm run build"
   },
   "keywords": [
     "broadcast-channel",
@@ -36,6 +37,7 @@
   ],
   "dependencies": {
     "@reduxjs/toolkit": "^2.6.1",
-    "pinia": "^3.0.1"
+    "pinia": "^3.0.1",
+    "zustand": "^5.0.3"
   }
 }
