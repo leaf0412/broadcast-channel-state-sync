@@ -20,7 +20,8 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "release": "release-it"
   },
   "keywords": [
     "broadcast-channel",
@@ -33,6 +34,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "release-it": "^18.1.2",
     "tsup": "^8.4.0",
     "typescript": "^5.0.0"
   },
@@ -42,6 +44,7 @@
   ],
   "dependencies": {
     "@reduxjs/toolkit": "^2.6.1",
+    "mobx": "^6.13.7",
     "pinia": "^3.0.1",
     "zustand": "^5.0.3"
   }
