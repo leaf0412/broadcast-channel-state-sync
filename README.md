@@ -10,7 +10,7 @@
 - 可配置的重试机制和超时设置
 - 自动状态初始化和同步
 - 支持自定义状态管理器
-- 内置对 Redux、Pinia 和 Zustand 的支持
+- 内置对 Redux、Pinia、Zustand 和 MobX 的支持
 - 支持 ESM 和 CommonJS 模块系统
 
 ## 安装
@@ -82,20 +82,6 @@ const adapter = new ReduxAdapter({
     channelName: 'redux-channel',
     syncTimeout: 3000,
     retryAttempts: 5,
-  },
-});
-
-// 在 slice 中定义 setState 方法
-const todoSlice = createSlice({
-  name: 'todos',
-  initialState,
-  reducers: {
-    setState: (state, action) => {
-      // 更新整个状态
-      state.todos = action.payload.todos;
-      state.filter = action.payload.filter;
-    },
-    // ... 其他 reducers
   },
 });
 
@@ -173,6 +159,44 @@ const manager = new BroadcastChannelManager(adapter, {
 });
 ```
 
+### 使用 MobX 适配器
+
+```typescript
+import { MobXAdapter } from 'broadcast-channel-state-sync';
+import { makeAutoObservable } from 'mobx';
+
+// 定义 store
+class TodoStore {
+  todos = [];
+  filter = 'all';
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  addTodo(text) {
+    this.todos.push({ id: Date.now(), text, completed: false });
+  }
+}
+
+// 创建 store 实例
+const store = new TodoStore();
+
+// 创建 MobX 适配器
+const adapter = new MobXAdapter({
+  store,
+  options: {
+    channelName: 'mobx-channel',
+    syncTimeout: 3000,
+    retryAttempts: 5,
+  },
+});
+
+const manager = new BroadcastChannelManager(adapter, {
+  channelName: 'mobx-state'
+});
+```
+
 ## 配置选项
 
 | 选项 | 类型 | 默认值 | 描述 |
@@ -201,6 +225,17 @@ Pinia 适配器需要在创建时提供 store 实例和配置选项。适配器�
 ### Zustand 适配器
 
 Zustand 适配器需要在创建时提供 store 实例和配置选项。适配器会自动处理状态更新，不需要在 store 中定义额外的方法。
+
+### MobX 适配器
+
+MobX 适配器需要在创建时提供 store 实例和配置选项。适配器会自动处理状态更新，不需要在 store 中定义额外的方法。确保你的 store 类使用了 `makeAutoObservable` 或 `makeObservable` 来使状态可观察。
+
+## 依赖版本
+
+- @reduxjs/toolkit: ^2.6.1
+- mobx: ^6.13.7
+- pinia: ^3.0.1
+- zustand: ^5.0.3
 
 ## 注意事项
 
